@@ -2,17 +2,22 @@ const Sauce = require('../models/sauce');
 
 
 exports.createSauce = (req, res, next) => {
-    console.log('+++++++');
-    console.log(JSON.stringify(req.body.name));
-    const sauce = new Sauce({
-      name: req.body.name,
-      manufacturer: req.body.manufacturer,
-      description: req.body.description,
-      imageUrl: req.body.imageUrl,
-      mainPepper: req.body.mainPepper,
-      heat: req.body.heat,
-      
-    });
+     req.body.sauce = JSON.parse(req.body.sauce);
+     const url = req.protocol + '://' + req.get('host');
+     const sauce = new Sauce({
+     name: req.body.sauce.name,
+      manufacturer: req.body.sauce.manufacturer,
+      description: req.body.sauce.description,
+      heat: req.body.sauce.heat,
+      imageUrl: url + '/images/' + req.file.filename,
+      mainPepper: req.body.sauce.mainPepper,
+      userId:req.body.sauce.userId,
+      likes:0,
+		  dislikes:0,
+		  usersLiked :[],
+		  usersDisliked:[],
+     
+      });
     sauce.save().then(
       () => {
         res.status(201).json({
@@ -21,7 +26,6 @@ exports.createSauce = (req, res, next) => {
       }
     ).catch(
       (error) => {
-        console.log('--------------------');
         console.log(req.body);
         console.error(error);
         res.status(400).json({
@@ -49,18 +53,14 @@ exports.createSauce = (req, res, next) => {
 
   exports.modifySauce =(req, res, next) => {
     const sauce = new Sauce({
-      _id: req.params._id,
+      _id: req.params.id,
       name: req.body.name,
       manufacturer: req.body.manufacturer,
       description: req.body.description,
       heat: req.body.heat,
-      likes: req.body.likes,
-      dislikes: req.body.dislikes,
-      imageUrl: req.body.imageUrl,
+      imageUrl:req.body.imageUrl,
       mainPepper: req.body.mainPepper,
-      usersLiked: req.body.usersLiked,
-      usersDisliked: req.body.usersDisliked,
-      userId: req.body.userId
+      userId: req.body.userId,
     });
 
     Sauce.updateOne({_id: req.params.id}, sauce).then(
