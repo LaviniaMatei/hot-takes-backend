@@ -35,10 +35,14 @@ exports.createSauce = (req, res, next) => {
     );
   };
 
+  function getSauce(id) {
+    return Sauce.findOne({
+      _id: id
+    });
+  }
+
   exports.getOneSauce = (req, res, next) => {
-    Sauce.findOne({
-      _id: req.params.id
-    }).then(
+    getSauce(req.params.id).then(
       (sauce) => {
         res.status(200).json(sauce);
       }
@@ -103,6 +107,59 @@ exports.createSauce = (req, res, next) => {
     ).catch(
       (error) => {
         res.status(400).json({
+          error: error
+        });
+      }
+    );
+  };
+
+  exports.likeSauce =(req, res, next) => {
+    getSauce(req.params.id).then(
+      (sauce) => {
+
+        switch(req.body.like) {
+          case -1: 
+            sauce.dislikes++;
+            sauce.usersDisliked.push(req.body.userId);
+            break;
+          case 1:
+            sauce.likes++;
+            sauce.usersLiked.push(req.body.userId);
+            break;
+          case 0: 
+          // when it's 0 then user either already likes the sauce and wants to remove the like or user dislikes the sauce already and wants to remove dislike
+          // if user already liked it
+            if(sauce.usersLiked.indexOf(req.body.userId) !== -1) {
+              console.log('removing like');
+              sauce.likes--;
+              sauce.usersLiked = sauce.usersLiked.filter(uid => uid !== req.body.userId);
+            }else if(sauce.usersDisliked.indexOf(req.body.userId) !== -1) {
+              console.log('removing dislike');
+              sauce.dislikes--;
+              sauce.usersDisliked = sauce.usersDisliked.filter(uid => uid !== req.body.userId);
+            }
+            break;
+        }
+        
+        Sauce.updateOne({_id: req.params.id}, sauce).then(
+          () => {
+            res.status(201).json({
+              message: 'Sauce like successfully!'
+            });
+          }
+        ).catch(
+          (error) => {
+            res.status(400).json({
+              error: error
+            });
+          }
+        );
+      }
+    ).catch(
+      (error) => {
+        console.log(req.params.id);
+        console.log(error);
+        res.status(404).json({
           error: error
         });
       }
